@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -45,6 +47,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     ProblemDetail badCredentials(BadCredentialsException e) {
         return problem(HttpStatus.UNAUTHORIZED, "Unauthorized", e.getMessage());
+    }
+
+    /**
+     * @PreAuthorize rejects the caller from inside the controller layer, so the exception reaches this
+     * advice, not Spring Security's own handler. Without this, the catch-all below would turn a
+     * forbidden request into a 500.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail accessDenied(AccessDeniedException e) {
+        return problem(HttpStatus.FORBIDDEN, "Forbidden", "You do not have permission to do this.");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ProblemDetail notAuthenticated(AuthenticationException e) {
+        return problem(HttpStatus.UNAUTHORIZED, "Unauthorized", "Authentication is required to access this resource.");
     }
 
     /** A database constraint stopped the write: the last line of defence against races. */

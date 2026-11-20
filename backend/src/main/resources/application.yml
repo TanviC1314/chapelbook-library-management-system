@@ -45,3 +45,7 @@ app:
     # No default secret: set JWT_SECRET (at least 32 characters, e.g. `openssl rand -base64 48`).
     secret: ${JWT_SECRET:}
     expiration: PT1H
+  bootstrap:
+    # Optional: create the first admin on startup if none exists. Both empty by default.
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}

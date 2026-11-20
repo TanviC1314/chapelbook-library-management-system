@@ -9,7 +9,7 @@ the end of each phase.
 - [x] Add feature-based package structure
 - [x] Configure PostgreSQL with Docker Compose
 - [x] Add Flyway and Testcontainers setup
-- [ ] Document the database design and ER diagram
+- [x] Document the database design and ER diagram
 - [ ] Schema: users, categories, books and copies
 - [ ] Schema: reservations, borrowing and fines
 - [ ] Schema: seats and seat bookings

@@ -61,13 +61,15 @@ class CatalogSchemaIntegrationTest {
         insertUser("Ann@Example.com", "STUDENT", null);
 
         assertThatThrownBy(() -> insertUser("ann@example.com", "LIBRARIAN", null))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_users_email_lower");
     }
 
     @Test
     void rejectsUnknownRole() {
         assertThatThrownBy(() -> insertUser("x@example.com", "SUPERUSER", null))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_users_role");
     }
 
     @Test
@@ -75,13 +77,15 @@ class CatalogSchemaIntegrationTest {
         insertUser("a@example.com", "STUDENT", "S200");
 
         assertThatThrownBy(() -> insertUser("b@example.com", "STUDENT", "S200"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_users_student_number");
     }
 
     @Test
     void librarianCannotHaveAStudentNumber() {
         assertThatThrownBy(() -> insertUser("lib@example.com", "LIBRARIAN", "S300"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_users_student_number_role");
     }
 
     @Test
@@ -89,7 +93,8 @@ class CatalogSchemaIntegrationTest {
         insertCategory("Science");
 
         assertThatThrownBy(() -> insertCategory("science"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_categories_name_lower");
     }
 
     @Test
@@ -100,13 +105,15 @@ class CatalogSchemaIntegrationTest {
         insertBook("111", category);
 
         assertThatThrownBy(() -> insertBook("111", category))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_books_isbn");
     }
 
     @Test
     void bookMustReferenceAnExistingCategory() {
         assertThatThrownBy(() -> insertBook("222", 999_999L))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("books_category_id_fkey");
     }
 
     @Test
@@ -115,7 +122,8 @@ class CatalogSchemaIntegrationTest {
 
         assertThatThrownBy(() -> jdbc.update(
                 "INSERT INTO books (title, author, category_id) VALUES ('   ', 'A', ?)", category))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_books_title_not_blank");
     }
 
     @Test
@@ -124,7 +132,8 @@ class CatalogSchemaIntegrationTest {
 
         assertThatThrownBy(() -> jdbc.update(
                 "INSERT INTO books (title, author, publication_year, category_id) VALUES ('T', 'A', 12, ?)", category))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_books_publication_year");
     }
 
     @Test
@@ -133,7 +142,8 @@ class CatalogSchemaIntegrationTest {
         insertCopy(book, "BC-DUP", "AVAILABLE");
 
         assertThatThrownBy(() -> insertCopy(book, "BC-DUP", "AVAILABLE"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_book_copies_barcode");
     }
 
     @Test
@@ -141,7 +151,8 @@ class CatalogSchemaIntegrationTest {
         long book = insertBook(null, insertCategory("Law"));
 
         assertThatThrownBy(() -> insertCopy(book, "BC-2", "BORROWED"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_book_copies_status");
     }
 
     @Test
@@ -150,7 +161,8 @@ class CatalogSchemaIntegrationTest {
         insertBook(null, category);
 
         assertThatThrownBy(() -> jdbc.update("DELETE FROM categories WHERE id = ?", category))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("books_category_id_fkey");
     }
 
     @Test

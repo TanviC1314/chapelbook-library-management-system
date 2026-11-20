@@ -11,7 +11,7 @@ the end of each phase.
 - [x] Add Flyway and Testcontainers setup
 - [x] Document the database design and ER diagram
 - [x] Schema: users, categories, books and copies
-- [ ] Schema: reservations, borrowing and fines
+- [x] Schema: reservations, borrowing and fines
 - [ ] Schema: seats and seat bookings
 
 ## Phase 2 – Entities, repositories and authentication

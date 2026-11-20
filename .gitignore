@@ -1,0 +1,31 @@
+# Build output
+target/
+build/
+dist/
+node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets and local config - never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+application-local.yml
+application-local.properties
+
+# Logs, coverage and test output
+*.log
+coverage/
+test-results/

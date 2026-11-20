@@ -51,8 +51,22 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-Setup instructions will be added as the project foundation lands. See
-[PROJECT_PROGRESS.md](PROJECT_PROGRESS.md) for current status.
+Only the database foundation exists so far (Phase 1). You need JDK 21 and Docker.
+
+```bash
+cp .env.example .env        # then set POSTGRES_PASSWORD in .env
+docker compose up -d postgres
+```
+
+Run the backend tests (they start their own throwaway PostgreSQL through Testcontainers, so Docker must be running):
+
+```bash
+cd backend
+./mvnw verify
+```
+
+The database design, with its ER diagram and the rules PostgreSQL enforces itself (no double-booked seats, one
+open loan per copy), is in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md).
 
 ## Disclaimer
 

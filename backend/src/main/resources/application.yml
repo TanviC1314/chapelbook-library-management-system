@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: chapelbook
+  jackson:
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

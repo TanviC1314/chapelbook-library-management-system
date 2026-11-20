@@ -51,7 +51,7 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-Only the database foundation exists so far (Phase 1). You need JDK 21 and Docker.
+The database, entities and authentication exist so far (Phases 1 and 2). You need JDK 21 and Docker.
 
 ```bash
 cp .env.example .env        # then set POSTGRES_PASSWORD in .env
@@ -64,6 +64,25 @@ Run the backend tests (they start their own throwaway PostgreSQL through Testcon
 cd backend
 ./mvnw verify
 ```
+
+To run the API locally, start the database, then set the secrets in your shell (see `.env.example`):
+
+```bash
+cd backend
+export DB_PASSWORD=<your POSTGRES_PASSWORD> JWT_SECRET=<at least 32 characters>
+export BOOTSTRAP_ADMIN_EMAIL=admin@example.com BOOTSTRAP_ADMIN_PASSWORD=<min 8 characters>   # optional first admin
+./mvnw spring-boot:run
+```
+
+Implemented endpoints so far:
+
+| Endpoint | Who |
+| --- | --- |
+| `POST /api/v1/auth/register` (creates a student) | anyone |
+| `POST /api/v1/auth/login` | anyone |
+| `GET /api/v1/users/me` | any signed-in user |
+| `GET /api/v1/users` (filter by role, paged) | librarian, admin |
+| `POST /api/v1/users` (create an account with a role) | admin |
 
 The database design, with its ER diagram and the rules PostgreSQL enforces itself (no double-booked seats, one
 open loan per copy), is in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md).

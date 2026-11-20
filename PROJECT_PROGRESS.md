@@ -15,10 +15,10 @@ the end of each phase.
 - [x] Schema: seats and seat bookings
 
 ## Phase 2 – Entities, repositories and authentication
-- [ ] Entities and repositories
-- [ ] Registration and login with JWT
-- [ ] Role-based access control
-- [ ] Authentication tests
+- [x] Entities and repositories
+- [x] Registration and login with JWT
+- [x] Role-based access control
+- [x] Authentication tests
 
 ## Phase 3 – Books, search and reservations
 - [ ] Book and copy management

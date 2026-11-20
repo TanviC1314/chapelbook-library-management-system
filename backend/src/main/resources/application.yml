@@ -34,3 +34,9 @@ management:
   endpoint:
     health:
       show-details: never
+
+app:
+  jwt:
+    # No default secret: set JWT_SECRET (at least 32 characters, e.g. `openssl rand -base64 48`).
+    secret: ${JWT_SECRET:}
+    expiration: PT1H

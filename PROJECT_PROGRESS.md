@@ -7,7 +7,7 @@ the end of each phase.
 - [x] Initialize repository and add README
 - [x] Configure Spring Boot and Maven
 - [x] Add feature-based package structure
-- [ ] Configure PostgreSQL with Docker Compose
+- [x] Configure PostgreSQL with Docker Compose
 - [ ] Add Flyway and Testcontainers setup
 - [ ] Document the database design and ER diagram
 - [ ] Schema: users, categories, books and copies

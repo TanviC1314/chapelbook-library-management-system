@@ -1,0 +1,24 @@
+# Local development database. The backend and frontend services are added in the delivery phase.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chapelbook-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-chapelbook}
+      POSTGRES_USER: ${POSTGRES_USER:-chapelbook}
+      # No default on purpose: Compose refuses to start until you set one in .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}
+    ports:
+      # Bound to localhost only. 5433 on the host avoids clashing with another local PostgreSQL on 5432.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - chapelbook-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  chapelbook-pgdata:

@@ -6,7 +6,7 @@ the end of each phase.
 ## Phase 1 – Project structure and database design
 - [x] Initialize repository and add README
 - [x] Configure Spring Boot and Maven
-- [ ] Add feature-based package structure
+- [x] Add feature-based package structure
 - [ ] Configure PostgreSQL with Docker Compose
 - [ ] Add Flyway and Testcontainers setup
 - [ ] Document the database design and ER diagram

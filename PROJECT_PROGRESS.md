@@ -12,7 +12,7 @@ the end of each phase.
 - [x] Document the database design and ER diagram
 - [x] Schema: users, categories, books and copies
 - [x] Schema: reservations, borrowing and fines
-- [ ] Schema: seats and seat bookings
+- [x] Schema: seats and seat bookings
 
 ## Phase 2 – Entities, repositories and authentication
 - [ ] Entities and repositories

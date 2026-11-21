@@ -51,7 +51,7 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-The database, entities and authentication exist so far (Phases 1 and 2). You need JDK 21 and Docker.
+The database, authentication, catalogue and reservations exist so far (Phases 1 to 3). You need JDK 21 and Docker.
 
 ```bash
 cp .env.example .env        # then set POSTGRES_PASSWORD in .env
@@ -83,6 +83,18 @@ Implemented endpoints so far:
 | `GET /api/v1/users/me` | any signed-in user |
 | `GET /api/v1/users` (filter by role, paged) | librarian, admin |
 | `POST /api/v1/users` (create an account with a role) | admin |
+| `GET /api/v1/categories` | any signed-in user |
+| `POST`, `PUT`, `DELETE /api/v1/categories` | librarian, admin |
+| `GET /api/v1/books` (search `q`, `categoryId`, `availableOnly`, `sort`, paging), `GET /api/v1/books/{id}` | any signed-in user |
+| `POST`, `PUT`, `DELETE /api/v1/books` | librarian, admin |
+| `GET`, `POST /api/v1/books/{id}/copies`, `PATCH /api/v1/copies/{id}` | librarian, admin |
+| `POST /api/v1/reservations`, `GET /api/v1/reservations/mine` | student |
+| `GET /api/v1/reservations` (filter by status) | librarian, admin |
+| `GET`, `DELETE /api/v1/reservations/{id}` (cancel) | owner, or librarian and admin |
+
+How reservations work: each title has a first-come first-served queue. If a copy is on the shelf the student is
+held it for three days; otherwise they join the queue. A returned, added, cancelled or expired copy goes to the next
+student in line. Every queue change locks that title first, so concurrent requests cannot hand out a copy twice.
 
 The database design, with its ER diagram and the rules PostgreSQL enforces itself (no double-booked seats, one
 open loan per copy), is in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md).

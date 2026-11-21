@@ -21,9 +21,9 @@ the end of each phase.
 - [x] Authentication tests
 
 ## Phase 3 – Books, search and reservations
-- [ ] Book and copy management
-- [ ] Catalogue search and availability
-- [ ] Reservation and cancellation
+- [x] Book and copy management
+- [x] Catalogue search and availability
+- [x] Reservation and cancellation
 
 ## Phase 4 – Borrowing, returns, fines and seats
 - [ ] Issue and return books

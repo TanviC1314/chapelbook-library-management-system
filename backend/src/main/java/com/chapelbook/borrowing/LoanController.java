@@ -29,4 +29,11 @@ public class LoanController {
             @Valid @RequestBody IssueRequest request) {
         return borrowing.issue(caller, request.userId(), request.copyBarcode());
     }
+
+    /** A librarian takes a copy back. The response carries the fine, if the book was late. */
+    @PostMapping("/return")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
+    public LoanResponse returnCopy(@Valid @RequestBody ReturnRequest request) {
+        return borrowing.returnCopy(request.copyBarcode());
+    }
 }

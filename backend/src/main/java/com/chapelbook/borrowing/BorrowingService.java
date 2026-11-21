@@ -8,6 +8,8 @@ import com.chapelbook.common.BusinessRuleException;
 import com.chapelbook.common.ConflictException;
 import com.chapelbook.common.ResourceNotFoundException;
 import com.chapelbook.config.LibraryProperties;
+import com.chapelbook.fine.Fine;
+import com.chapelbook.fine.FineCalculator;
 import com.chapelbook.fine.FineRepository;
 import com.chapelbook.fine.FineStatus;
 import com.chapelbook.reservation.Reservation;
@@ -16,6 +18,7 @@ import com.chapelbook.security.AuthenticatedUser;
 import com.chapelbook.user.Role;
 import com.chapelbook.user.User;
 import com.chapelbook.user.UserRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -87,6 +90,35 @@ public class BorrowingService {
         // A different copy the student was holding may have gone back on the shelf; offer it to the next in line.
         reservationService.serveQueue(bookId);
         return LoanResponse.from(loan, now, null);
+    }
+
+    /**
+     * Takes a copy back. If it is late, a fine is raised for the number of started days overdue (capped per
+     * loan). The copy goes back on the shelf, or straight to the student waiting longest for the title.
+     */
+    @Transactional
+    public LoanResponse returnCopy(String barcode) {
+        BookCopy probe = copies.findByBarcode(barcode.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("No copy has that barcode."));
+        long bookId = probe.getBook().getId();
+        books.findByIdForUpdate(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found."));
+        BookCopy copy = copies.findByIdForUpdate(probe.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Copy not found."));
+
+        BorrowRecord loan = loans.findByCopyIdAndReturnedAtIsNull(copy.getId())
+                .orElseThrow(() -> new ConflictException("This copy is not on loan."));
+        Instant now = clock.instant();
+        loan.markReturned(now);
+        loans.saveAndFlush(loan);
+        copy.setStatus(CopyStatus.AVAILABLE);
+        copies.saveAndFlush(copy);
+
+        BigDecimal amount = FineCalculator.fineFor(loan.getDueAt(), now, policy.finePerDay(), policy.maxFinePerLoan());
+        if (amount.signum() > 0) {
+            fines.saveAndFlush(new Fine(loan, loan.getUser(), amount));
+        }
+        reservationService.serveQueue(bookId);
+        return LoanResponse.from(loan, now, amount.signum() > 0 ? amount : null);
     }
 
     private void checkCopyCanBeIssuedTo(BookCopy copy, long studentId) {

@@ -126,6 +126,8 @@
                     <environmentVariables>
                         <!-- Test-only value. The application has no default secret. -->
                         <JWT_SECRET>test-only-secret-that-is-at-least-32-bytes-long</JWT_SECRET>
+                        <!-- Scheduled jobs would race with tests that set up expired reservations. -->
+                        <APP_SCHEDULING_ENABLED>false</APP_SCHEDULING_ENABLED>
                     </environmentVariables>
                     <excludes>
                         <exclude>**/*IntegrationTest.java</exclude>
@@ -141,6 +143,8 @@
                     <environmentVariables>
                         <!-- Test-only value. The application has no default secret. -->
                         <JWT_SECRET>test-only-secret-that-is-at-least-32-bytes-long</JWT_SECRET>
+                        <!-- Scheduled jobs would race with tests that set up expired reservations. -->
+                        <APP_SCHEDULING_ENABLED>false</APP_SCHEDULING_ENABLED>
                     </environmentVariables>
                     <includes>
                         <include>**/*IntegrationTest.java</include>

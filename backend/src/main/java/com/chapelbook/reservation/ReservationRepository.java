@@ -6,11 +6,21 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
+    /** Loads the title, student and held copy in the same query so a list of reservations is not one query per row. */
+    @Override
+    @EntityGraph(attributePaths = {"book", "user", "copy"})
+    Page<Reservation> findAll(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"book", "user", "copy"})
+    Optional<Reservation> findById(Long id);
 
     boolean existsByBookId(Long bookId);
 
@@ -18,8 +28,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     long countByUserIdAndStatusIn(Long userId, Collection<ReservationStatus> statuses);
 
+    @EntityGraph(attributePaths = {"book", "user", "copy"})
     Page<Reservation> findByUserId(Long userId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"book", "user", "copy"})
     Page<Reservation> findByStatus(ReservationStatus status, Pageable pageable);
 
     /** The next student in the queue for a title: the oldest pending reservation. */

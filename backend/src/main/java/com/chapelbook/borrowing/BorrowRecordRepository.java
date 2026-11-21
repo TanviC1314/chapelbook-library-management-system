@@ -29,4 +29,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     Page<BorrowRecord> findOverdue(@Param("now") Instant now, Pageable pageable);
 
     long countByReturnedAtIsNull();
+
+    /** Does the student currently have any copy of this title out on loan? */
+    boolean existsByUserIdAndCopyBookIdAndReturnedAtIsNull(Long userId, Long bookId);
 }

@@ -49,3 +49,10 @@ app:
     # Optional: create the first admin on startup if none exists. Both empty by default.
     admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
     admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+  library:
+    # How long a held copy waits for the student to collect it, and how many reservations one student may have.
+    reservation-hold-days: 3
+    max-active-reservations: 5
+  scheduling:
+    # Runs housekeeping jobs such as expiring uncollected reservations. Tests switch it off.
+    enabled: ${APP_SCHEDULING_ENABLED:true}

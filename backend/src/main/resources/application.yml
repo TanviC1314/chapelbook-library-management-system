@@ -50,9 +50,19 @@ app:
     admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
     admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   library:
-    # How long a held copy waits for the student to collect it, and how many reservations one student may have.
-    reservation-hold-days: 3
-    max-active-reservations: 5
+    # Library policy. Every value here is optional; the code falls back to these same defaults.
+    reservation-hold-days: 3        # days a held copy waits to be collected
+    max-active-reservations: 5      # reservations one student may have at once
+    loan-days: 14                   # loan period
+    max-loans-per-student: 5        # books out at once
+    max-renewals: 2                 # renewals per loan
+    renewal-days: 14                # days added by each renewal
+    fine-per-day: 0.25              # per started day overdue
+    max-fine-per-loan: 10.00        # cap for one loan
+    borrowing-blocked-above: 5.00   # unpaid fines above this block new loans
+    seat-max-advance-days: 14       # how far ahead a seat can be booked
+    seat-min-minutes: 15            # shortest seat booking
+    max-upcoming-seat-bookings: 3   # seat bookings a student may hold that have not ended
   scheduling:
     # Runs housekeeping jobs such as expiring uncollected reservations. Tests switch it off.
     enabled: ${APP_SCHEDULING_ENABLED:true}

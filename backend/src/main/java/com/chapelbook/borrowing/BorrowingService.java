@@ -6,6 +6,7 @@ import com.chapelbook.book.BookRepository;
 import com.chapelbook.book.CopyStatus;
 import com.chapelbook.common.BusinessRuleException;
 import com.chapelbook.common.ConflictException;
+import com.chapelbook.common.PageResponse;
 import com.chapelbook.common.ResourceNotFoundException;
 import com.chapelbook.config.LibraryProperties;
 import com.chapelbook.fine.Fine;
@@ -13,7 +14,9 @@ import com.chapelbook.fine.FineCalculator;
 import com.chapelbook.fine.FineRepository;
 import com.chapelbook.fine.FineStatus;
 import com.chapelbook.reservation.Reservation;
+import com.chapelbook.reservation.ReservationRepository;
 import com.chapelbook.reservation.ReservationService;
+import com.chapelbook.reservation.ReservationStatus;
 import com.chapelbook.security.AuthenticatedUser;
 import com.chapelbook.user.Role;
 import com.chapelbook.user.User;
@@ -22,6 +25,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,18 +46,20 @@ public class BorrowingService {
     private final UserRepository users;
     private final FineRepository fines;
     private final ReservationService reservationService;
+    private final ReservationRepository reservations;
     private final LibraryProperties policy;
     private final Clock clock;
 
     public BorrowingService(BorrowRecordRepository loans, BookRepository books, BookCopyRepository copies,
             UserRepository users, FineRepository fines, ReservationService reservationService,
-            LibraryProperties policy, Clock clock) {
+            ReservationRepository reservations, LibraryProperties policy, Clock clock) {
         this.loans = loans;
         this.books = books;
         this.copies = copies;
         this.users = users;
         this.fines = fines;
         this.reservationService = reservationService;
+        this.reservations = reservations;
         this.policy = policy;
         this.clock = clock;
     }
@@ -119,6 +125,71 @@ public class BorrowingService {
         }
         reservationService.serveQueue(bookId);
         return LoanResponse.from(loan, now, amount.signum() > 0 ? amount : null);
+    }
+
+    /**
+     * Extends a loan. Students renew their own; staff can renew any. A loan can be renewed only while it is not
+     * overdue, a limited number of times, and only if nobody is waiting for the title.
+     */
+    @Transactional
+    public LoanResponse renew(AuthenticatedUser caller, long loanId) {
+        long bookId = loans.findBookId(loanId).orElseThrow(() -> new ResourceNotFoundException("Loan not found."));
+        books.findByIdForUpdate(bookId).orElseThrow(() -> new ResourceNotFoundException("Book not found."));
+        BorrowRecord loan = visibleTo(caller, loanId);
+        Instant now = clock.instant();
+
+        if (loan.isReturned()) {
+            throw new ConflictException("This loan has already been returned.");
+        }
+        if (loan.getDueAt().isBefore(now)) {
+            throw new BusinessRuleException("An overdue book cannot be renewed. Please return it.");
+        }
+        if (loan.getRenewalCount() >= policy.maxRenewals()) {
+            throw new BusinessRuleException("This loan has already been renewed " + policy.maxRenewals() + " times.");
+        }
+        if (reservations.countByBookIdAndStatus(bookId, ReservationStatus.PENDING) > 0) {
+            throw new BusinessRuleException("Another student is waiting for this book, so it cannot be renewed.");
+        }
+        loan.renew(loan.getDueAt().plus(policy.renewalDays(), ChronoUnit.DAYS));
+        return LoanResponse.from(loans.saveAndFlush(loan), now, null);
+    }
+
+    @Transactional(readOnly = true)
+    public LoanResponse get(AuthenticatedUser caller, long loanId) {
+        BorrowRecord loan = visibleTo(caller, loanId);
+        BigDecimal fine = fines.findByBorrowRecordId(loanId).map(Fine::getAmount).orElse(null);
+        return LoanResponse.from(loan, clock.instant(), fine);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<LoanResponse> mine(long userId, boolean activeOnly, Pageable pageable) {
+        Instant now = clock.instant();
+        var page = activeOnly ? loans.findByUserIdAndReturnedAtIsNull(userId, pageable)
+                : loans.findByUserId(userId, pageable);
+        return PageResponse.of(page, loan -> LoanResponse.from(loan, now, null));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<LoanResponse> list(Long userId, LoanScope scope, Pageable pageable) {
+        Instant now = clock.instant();
+        var page = userId != null ? (scope == LoanScope.ALL ? loans.findByUserId(userId, pageable)
+                        : loans.findByUserIdAndReturnedAtIsNull(userId, pageable))
+                : switch (scope) {
+                    case ALL -> loans.findAll(pageable);
+                    case ACTIVE -> loans.findByReturnedAtIsNull(pageable);
+                    case OVERDUE -> loans.findOverdue(now, pageable);
+                };
+        return PageResponse.of(page, loan -> LoanResponse.from(loan, now, null));
+    }
+
+    /** Students only ever see their own loans; someone else's looks like it does not exist. */
+    private BorrowRecord visibleTo(AuthenticatedUser caller, long loanId) {
+        BorrowRecord loan = loans.findById(loanId).orElseThrow(() -> new ResourceNotFoundException("Loan not found."));
+        boolean staff = caller.role() == Role.LIBRARIAN || caller.role() == Role.ADMIN;
+        if (!staff && !loan.getUser().getId().equals(caller.id())) {
+            throw new ResourceNotFoundException("Loan not found.");
+        }
+        return loan;
     }
 
     private void checkCopyCanBeIssuedTo(BookCopy copy, long studentId) {

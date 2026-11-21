@@ -55,4 +55,8 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     boolean existsByUserIdAndReturnedAtIsNullAndDueAtBefore(Long userId, Instant now);
 
     List<BorrowRecord> findByUserIdAndReturnedAtIsNull(Long userId);
+
+    /** The title a loan belongs to, read without loading the loan (so the title can be locked first). */
+    @Query("select l.copy.book.id from BorrowRecord l where l.id = :id")
+    Optional<Long> findBookId(@Param("id") Long id);
 }

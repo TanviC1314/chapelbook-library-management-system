@@ -1,8 +1,10 @@
 package com.chapelbook.book;
 
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -14,9 +16,20 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
 
     boolean existsByBarcode(String barcode);
 
+    boolean existsByBookId(Long bookId);
+
     List<BookCopy> findByBookIdOrderByBarcode(Long bookId);
 
     long countByBookIdAndStatus(Long bookId, CopyStatus status);
+
+    /** Copy counts per status for a set of books, in one query (used to show availability on a page of results). */
+    @Query("""
+            select c.book.id as bookId, c.status as status, count(c) as total
+            from BookCopy c
+            where c.book.id in :bookIds
+            group by c.book.id, c.status
+            """)
+    List<CopyStatusCount> countByBookIds(@Param("bookIds") Collection<Long> bookIds);
 
     /**
      * Loads a copy and takes a row lock until the transaction ends. Used when lending or holding a
@@ -33,6 +46,5 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
             where c.book.id = :bookId and c.status = com.chapelbook.book.CopyStatus.AVAILABLE
             order by c.id
             """)
-    List<BookCopy> findAvailableForUpdate(@Param("bookId") Long bookId,
-            org.springframework.data.domain.Pageable limit);
+    List<BookCopy> findAvailableForUpdate(@Param("bookId") Long bookId, Pageable limit);
 }

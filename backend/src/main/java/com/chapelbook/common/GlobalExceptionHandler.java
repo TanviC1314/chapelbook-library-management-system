@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -70,6 +71,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("Database constraint violation: {}", e.getMostSpecificCause().getMessage());
         return problem(HttpStatus.CONFLICT, "Conflict",
                 "The request conflicts with existing data. Please refresh and try again.");
+    }
+
+    /** Two people edited the same record at once; the second save is refused rather than overwriting the first. */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ProblemDetail optimisticLock(ObjectOptimisticLockingFailureException e) {
+        return problem(HttpStatus.CONFLICT, "Conflict",
+                "Someone else changed this record at the same time. Please reload it and try again.");
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

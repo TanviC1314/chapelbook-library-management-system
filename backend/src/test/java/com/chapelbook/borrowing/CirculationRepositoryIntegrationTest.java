@@ -83,7 +83,7 @@ class CirculationRepositoryIntegrationTest {
         Thread.sleep(5);
         reservations.saveAndFlush(new Reservation(other, book));
 
-        var next = reservations.findFirstByBookIdAndStatusOrderByReservedAtAsc(book.getId(), ReservationStatus.PENDING);
+        var next = reservations.findFirstByBookIdAndStatusOrderByReservedAtAscIdAsc(book.getId(), ReservationStatus.PENDING);
 
         assertThat(first.getStatus()).isEqualTo(ReservationStatus.PENDING);
         assertThat(next).isPresent();

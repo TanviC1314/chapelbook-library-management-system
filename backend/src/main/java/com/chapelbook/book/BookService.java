@@ -4,17 +4,24 @@ import com.chapelbook.category.Category;
 import com.chapelbook.category.CategoryRepository;
 import com.chapelbook.common.BusinessRuleException;
 import com.chapelbook.common.ConflictException;
+import com.chapelbook.common.PageResponse;
 import com.chapelbook.common.ResourceNotFoundException;
 import com.chapelbook.reservation.ReservationRepository;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookService {
+
+    static final int MAX_PAGE_SIZE = 100;
 
     private final BookRepository books;
     private final BookCopyRepository copies;
@@ -33,6 +40,21 @@ public class BookService {
     public BookResponse get(Long id) {
         Book book = find(id);
         return BookResponse.from(book, availabilityFor(List.of(id)).getOrDefault(id, BookAvailability.NONE));
+    }
+
+    /** The catalogue: filter by text, category and availability, one page at a time. */
+    @Transactional(readOnly = true)
+    public PageResponse<BookResponse> search(String text, Long categoryId, boolean availableOnly, BookSort sort,
+            int page, int size) {
+        Specification<Book> filter = Specification.where(BookSpecifications.matchesText(text))
+                .and(BookSpecifications.inCategory(categoryId))
+                .and(BookSpecifications.hasAvailableCopy(availableOnly));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE),
+                sort.toSort());
+        Page<Book> result = books.findAll(filter, pageable);
+        Map<Long, BookAvailability> availability = availabilityFor(result.getContent().stream().map(Book::getId).toList());
+        return PageResponse.of(result,
+                book -> BookResponse.from(book, availability.getOrDefault(book.getId(), BookAvailability.NONE)));
     }
 
     @Transactional

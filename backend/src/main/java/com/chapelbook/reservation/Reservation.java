@@ -100,7 +100,9 @@ public class Reservation extends AuditedEntity {
         this.status = ReservationStatus.READY;
     }
 
-    public void markFulfilled() {
+    /** The student collected the book: remember which copy they ended up borrowing. */
+    public void markFulfilled(BookCopy borrowedCopy) {
+        this.copy = borrowedCopy;
         this.status = ReservationStatus.FULFILLED;
     }
 

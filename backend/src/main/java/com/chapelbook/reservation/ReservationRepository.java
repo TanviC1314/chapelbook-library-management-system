@@ -26,6 +26,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     boolean existsByUserIdAndBookIdAndStatusIn(Long userId, Long bookId, Collection<ReservationStatus> statuses);
 
+    /** The student's live reservation for a title, if they have one. */
+    Optional<Reservation> findFirstByUserIdAndBookIdAndStatusIn(Long userId, Long bookId,
+            Collection<ReservationStatus> statuses);
+
+    /** Who a held copy is being kept for. */
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Reservation> findByCopyIdAndStatus(Long copyId, ReservationStatus status);
+
     long countByUserIdAndStatusIn(Long userId, Collection<ReservationStatus> statuses);
 
     @EntityGraph(attributePaths = {"book", "user", "copy"})

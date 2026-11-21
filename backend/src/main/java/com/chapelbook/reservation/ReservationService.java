@@ -120,6 +120,32 @@ public class ReservationService {
         return true;
     }
 
+    /**
+     * A student is borrowing a title: if they had a live reservation for it, it is now fulfilled. If they were
+     * holding a different copy than the one they were given, that copy goes back on the shelf. The caller must
+     * hold the title's lock and call {@link #serveQueue(long)} afterwards.
+     */
+    @Transactional
+    public Optional<Reservation> fulfilForLoan(long userId, BookCopy borrowedCopy, long bookId) {
+        Optional<Reservation> live = reservations.findFirstByUserIdAndBookIdAndStatusIn(userId, bookId, ACTIVE);
+        live.ifPresent(reservation -> {
+            boolean holdingAnotherCopy = reservation.getStatus() == ReservationStatus.READY
+                    && reservation.getCopy() != null && !reservation.getCopy().getId().equals(borrowedCopy.getId());
+            if (holdingAnotherCopy) {
+                releaseHeldCopy(reservation);
+            }
+            reservation.markFulfilled(borrowedCopy);
+            reservations.saveAndFlush(reservation);
+        });
+        return live;
+    }
+
+    /** The reservation a HELD copy is being kept for, if any. */
+    @Transactional(readOnly = true)
+    public Optional<Reservation> holderOf(long copyId) {
+        return reservations.findByCopyIdAndStatus(copyId, ReservationStatus.READY);
+    }
+
     @Transactional(readOnly = true)
     public List<Long> findExpiredIds() {
         return reservations.findByStatusAndReadyUntilBefore(ReservationStatus.READY, clock.instant())

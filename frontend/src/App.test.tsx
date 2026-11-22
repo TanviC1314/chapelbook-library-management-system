@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { tokenStore } from './auth/tokenStore'
 import type { Role } from './api/types'
+import { makeOverview } from './test/overview'
 import { json, makeToken, makeUser, mockApi, page, problem, renderApp } from './test/utils'
 
 /** The whole app with a stored session, as after a page reload. */
@@ -15,6 +16,9 @@ function renderSignedIn(role: Role, route: string) {
     'GET /reservations/mine': json(page([])),
     'GET /fines/mine/balance': json({ unpaid: 0, borrowingBlockedAbove: 5, blocked: false }),
     'GET /seat-bookings/mine': json(page([])),
+    // and the librarian dashboard
+    'GET /statistics/overview': json(makeOverview()),
+    'GET /loans': json(page([])),
   })
   return renderApp(<App />, { route })
 }
@@ -79,7 +83,7 @@ describe('App routing and role access', () => {
   it('keeps a signed-in user off the login page', async () => {
     renderSignedIn('LIBRARIAN', '/login')
 
-    expect(await screen.findByText('Librarian portal')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Welcome, Test librarian' })).toBeInTheDocument()
   })
 
   it('shows a not-found page for an unknown address', async () => {

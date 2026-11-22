@@ -15,6 +15,7 @@ const MyBorrowingsPage = lazy(() => import('./features/student/MyBorrowingsPage'
 const MyFinesPage = lazy(() => import('./features/student/MyFinesPage'))
 const StudentSeatsPage = lazy(() => import('./features/student/StudentSeatsPage'))
 const StudentDashboard = lazy(() => import('./features/student/StudentDashboard'))
+const LibrarianDashboard = lazy(() => import('./features/librarian/LibrarianDashboard'))
 
 export default function App() {
   return (
@@ -36,7 +37,7 @@ export default function App() {
             <Route path="/student/seats" element={<StudentSeatsPage />} />
           </Route>
           <Route element={<RequireRole roles={['LIBRARIAN', 'ADMIN']} />}>
-            <Route path="/librarian" element={<PortalHome />} />
+            <Route path="/librarian" element={<LibrarianDashboard />} />
           </Route>
           <Route element={<RequireRole roles={['ADMIN']} />}>
             <Route path="/admin" element={<PortalHome />} />

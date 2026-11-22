@@ -51,7 +51,7 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-The database, authentication, catalogue, reservations, borrowing, fines, seat booking and the admin dashboard data exist so far (Phases 1 to 5). You need JDK 21 and Docker.
+The backend (Phases 1 to 5) and the React frontend (Phase 6) are built. You need JDK 21, Node 20+ and Docker.
 
 ```bash
 cp .env.example .env        # then set POSTGRES_PASSWORD in .env
@@ -74,7 +74,26 @@ export BOOTSTRAP_ADMIN_EMAIL=admin@example.com BOOTSTRAP_ADMIN_PASSWORD=<min 8 c
 ./mvnw spring-boot:run
 ```
 
-Implemented endpoints so far:
+### Frontend
+
+With the API running on port 8080, start the web app (Vite proxies `/api` to the backend, so there is no CORS setup):
+
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
+```
+
+If the backend is on another port, set `VITE_API_PROXY_TARGET` (for example `http://localhost:8085`). Other scripts:
+`npm test` (Vitest + Testing Library), `npm run lint`, `npm run build` (type-checks, then builds).
+
+Register on the sign-in page to get a student account; the bootstrap admin (above) can create librarians under
+Users. Each role gets its own portal: students browse, reserve, track loans and fines and book seats; librarians
+manage the catalogue and copies, issue and return books at the desk, and handle reservations, fines and seats;
+admins see the dashboard, reports and user management. The pages show real API data only, and the backend, not the
+UI, is what enforces who may do what.
+
+Implemented endpoints:
 
 | Endpoint | Who |
 | --- | --- |

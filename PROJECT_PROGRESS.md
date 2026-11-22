@@ -35,10 +35,10 @@ the end of each phase.
 - [x] Library statistics
 
 ## Phase 6 – Frontend
-- [ ] Setup, authentication pages and layout
-- [ ] Student portal
-- [ ] Librarian portal
-- [ ] Admin portal
+- [x] Setup, authentication pages and layout
+- [x] Student portal
+- [x] Librarian portal
+- [x] Admin portal
 
 ## Phase 7 – Quality and delivery
 - [ ] OpenAPI documentation

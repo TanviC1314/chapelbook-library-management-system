@@ -11,6 +11,8 @@ import NotFoundPage from './pages/NotFoundPage'
 const CataloguePage = lazy(() => import('./features/catalogue/CataloguePage'))
 const BookDetailPage = lazy(() => import('./features/catalogue/BookDetailPage'))
 const MyReservationsPage = lazy(() => import('./features/student/MyReservationsPage'))
+const MyBorrowingsPage = lazy(() => import('./features/student/MyBorrowingsPage'))
+const MyFinesPage = lazy(() => import('./features/student/MyFinesPage'))
 
 export default function App() {
   return (
@@ -27,6 +29,8 @@ export default function App() {
           <Route element={<RequireRole roles={['STUDENT']} />}>
             <Route path="/student" element={<PortalHome />} />
             <Route path="/student/reservations" element={<MyReservationsPage />} />
+            <Route path="/student/borrowings" element={<MyBorrowingsPage />} />
+            <Route path="/student/fines" element={<MyFinesPage />} />
           </Route>
           <Route element={<RequireRole roles={['LIBRARIAN', 'ADMIN']} />}>
             <Route path="/librarian" element={<PortalHome />} />

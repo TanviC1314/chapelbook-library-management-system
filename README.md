@@ -1,99 +1,162 @@
 # ChapelBook – Library Management & Booking System
 
-> **Status: early development.** This repository is built incrementally, one small reviewed
-> commit at a time. Nothing below is claimed as working until it is ticked in
-> [PROJECT_PROGRESS.md](PROJECT_PROGRESS.md).
+[![CI](https://github.com/TanviC1314/chapelbook-library-management-system/actions/workflows/ci.yml/badge.svg)](https://github.com/TanviC1314/chapelbook-library-management-system/actions/workflows/ci.yml)
 
-ChapelBook is a full-stack web application that simplifies library operations. Students browse
-books, reserve copies, track what they have borrowed and book study seats. Librarians manage the
-catalogue, issue and return books and monitor overdue items. Administrators manage users and
-see how the library is used.
+ChapelBook is a full-stack web application that simplifies library operations. Students browse books, reserve
+copies, track what they have borrowed and book study seats. Librarians manage the catalogue, issue and return books
+and monitor overdue items. Administrators manage users and see how the library is used.
 
-It is a portfolio project that demonstrates REST API design, database design, authentication and
-role-based access control, business logic with real concurrency concerns, and a React frontend.
+It is a portfolio project that demonstrates REST API design, database design, authentication and role-based access
+control, business logic with real concurrency concerns, and a React frontend. Build progress is tracked in
+[PROJECT_PROGRESS.md](PROJECT_PROGRESS.md).
 
-## Planned features
+## What it does
 
-### Student portal
-- Register and log in
-- Browse and search books by title, author and category; check availability
-- Reserve and cancel book reservations
-- View current borrowings, borrowing history, due dates and overdue fines
-- Book and cancel library study seats
+**Students** register, search the catalogue by title, author or category, see live availability, reserve a title (a
+free copy is held for three days, otherwise they join a first-come first-served queue), watch loans, due dates and
+fines, renew loans, and book and cancel study seats.
 
-### Librarian portal
-- Add, update and manage books and individual book copies
-- Issue books and process returns
-- Manage reservations
-- Monitor overdue books
+**Librarians** manage titles, categories and individual copies (by barcode), issue and return books at a desk screen
+that works with a barcode scanner, and handle reservations, overdue loans, fines and seats.
 
-### Admin portal
-- Manage students and librarians
-- View library statistics
-- Monitor book circulation and seat bookings
+**Administrators** also manage accounts (create librarians, deactivate, reset passwords), see a dashboard, and run
+circulation and seat-usage reports for any period up to a year.
 
-## Planned technology stack
+## Technology
 
 | Area | Technology |
 | --- | --- |
-| Frontend | React, TypeScript |
-| Backend | Java 21, Spring Boot 3, Spring Data JPA, Hibernate, Spring Security with JWT |
-| Database | PostgreSQL, Flyway migrations |
-| Testing | JUnit 5, Mockito, Spring Boot Test, Testcontainers |
-| API documentation | Swagger / OpenAPI |
-| Build and delivery | Maven, Docker, Docker Compose, GitHub Actions |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form + zod, Recharts |
+| Backend | Java 21, Spring Boot 3.5, Spring Data JPA / Hibernate, Spring Security with JWT |
+| Database | PostgreSQL 16, Flyway migrations |
+| Testing | JUnit 5, Mockito, Spring Boot Test, Testcontainers; Vitest and Testing Library |
+| API documentation | OpenAPI 3.1 and Swagger UI (springdoc) |
+| Delivery | Maven, Docker, Docker Compose, nginx, GitHub Actions |
 
-## Architecture (planned)
+## Architecture
 
-Layered backend, organised by feature: **Controller → Service → Repository → Database**, with DTOs
-at the API boundary and a security layer for JWT authentication and role-based access control. The
-React frontend talks to the backend only through the REST API.
-
-## Getting started
-
-The backend (Phases 1 to 5) and the React frontend (Phase 6) are built. You need JDK 21, Node 20+ and Docker.
-
-```bash
-cp .env.example .env        # then set POSTGRES_PASSWORD in .env
-docker compose up -d postgres
+```
+ browser ──► nginx (frontend container) ──┬─► static React app
+                  port 8081               └─► /api, /v3/api-docs, /swagger-ui ──► Spring Boot ──► PostgreSQL
 ```
 
-Run the backend tests (they start their own throwaway PostgreSQL through Testcontainers, so Docker must be running):
+The backend is layered by feature: **Controller → Service → Repository → Database**, with DTOs at the API boundary and a
+stateless JWT security layer. Who may call what is declared with `@PreAuthorize` next to the code it protects. The
+browser only ever talks to one origin (nginx in Docker, the Vite dev server locally), so no CORS configuration exists
+and the backend is not exposed directly.
+
+Decisions worth knowing about:
+
+- **PostgreSQL enforces the hard rules itself.** A seat cannot be double booked and a student cannot hold two
+  overlapping bookings (exclusion constraints), a copy has at most one open loan, and a student has at most one open
+  reservation per title (partial unique indexes). The
+  application logic sits on top; the database is the last line of defence. See
+  [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md) for the ER diagram.
+- **Concurrency is handled, then tested.** Every change to a title's reservation queue locks the title row first, then
+  the copy (always in that order, so locks cannot deadlock); a student's seat bookings are serialised; concurrent
+  admin demotions cannot leave the system without an admin. The concurrency tests were checked by removing each lock
+  or constraint and watching the test fail.
+- **Flyway owns the schema.** Hibernate only validates it (`ddl-auto=validate`).
+- **Errors are RFC 9457 problem details**, with a list of bad fields for validation errors.
+- **The token is not trusted for permissions.** The role and active flag are read from the database on every request,
+  so a deactivated or demoted user loses access on their very next call.
+
+## Run everything with Docker
+
+You need Docker. No Java or Node is required.
 
 ```bash
-cd backend
-./mvnw verify
+cp .env.example .env
 ```
 
-To run the API locally, start the database, then set the secrets in your shell (see `.env.example`):
+Edit `.env` and set the three values Compose will not start without (there are no default secrets on purpose):
+
+| Variable | What to put |
+| --- | --- |
+| `POSTGRES_PASSWORD` | any strong password |
+| `JWT_SECRET` | at least 32 characters, for example `openssl rand -base64 48` |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | the first administrator (password: 8+ characters). Optional, but without it there is no way to create librarians |
+
+```bash
+docker compose up -d --build
+```
+
+Open <http://localhost:8081>. Sign in with the administrator, create a librarian under **Users**, and register a
+student from the sign-in page. API documentation is at <http://localhost:8081/swagger-ui.html>.
+
+```bash
+docker compose logs -f backend   # watch the API start (Flyway migrates the database on first start)
+docker compose down              # stop, keeping the data
+docker compose down -v           # stop and delete the database
+```
+
+The web port can be changed with `WEB_PORT`. PostgreSQL is published on `127.0.0.1:5433` only.
+
+## Develop locally
+
+You need JDK 21, Node 20+ and Docker.
+
+```bash
+docker compose up -d postgres      # just the database
+```
+
+Backend (set the secrets in your shell, see `.env.example`):
 
 ```bash
 cd backend
 export DB_PASSWORD=<your POSTGRES_PASSWORD> JWT_SECRET=<at least 32 characters>
 export BOOTSTRAP_ADMIN_EMAIL=admin@example.com BOOTSTRAP_ADMIN_PASSWORD=<min 8 characters>   # optional first admin
-./mvnw spring-boot:run
+./mvnw spring-boot:run             # http://localhost:8080, Swagger UI at /swagger-ui.html
 ```
 
-### Frontend
-
-With the API running on port 8080, start the web app (Vite proxies `/api` to the backend, so there is no CORS setup):
+Frontend (Vite proxies `/api` to the backend):
 
 ```bash
 cd frontend
 npm install
-npm run dev          # http://localhost:5173
+npm run dev                        # http://localhost:5173
 ```
 
-If the backend is on another port, set `VITE_API_PROXY_TARGET` (for example `http://localhost:8085`). Other scripts:
-`npm test` (Vitest + Testing Library), `npm run lint`, `npm run build` (type-checks, then builds).
+If the backend is on another port, set `VITE_API_PROXY_TARGET` (for example `http://localhost:8085`).
 
-Register on the sign-in page to get a student account; the bootstrap admin (above) can create librarians under
-Users. Each role gets its own portal: students browse, reserve, track loans and fines and book seats; librarians
-manage the catalogue and copies, issue and return books at the desk, and handle reservations, fines and seats;
-admins see the dashboard, reports and user management. The pages show real API data only, and the backend, not the
-UI, is what enforces who may do what.
+## Tests
 
-Implemented endpoints:
+```bash
+cd backend && ./mvnw verify        # unit tests, then integration tests on a real PostgreSQL (Docker must be running)
+cd frontend && npm test            # Vitest + Testing Library
+cd frontend && npm run lint && npm run build   # lint, then type-check and bundle
+```
+
+The backend has 288 automated tests; integration tests start a throwaway PostgreSQL 16 through Testcontainers rather
+than using an in-memory substitute, and a JaCoCo coverage report is written to `backend/target/site/jacoco`. The
+frontend has 311. GitHub Actions runs all of the above on every push and pull request, then builds the Docker images,
+starts the whole stack and smoke-tests it through the web port (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+
+## Deploying
+
+The Compose file is a complete single-server deployment. For a real server:
+
+1. **Put HTTPS in front.** The nginx container speaks plain HTTP. Terminate TLS with a reverse proxy (Caddy, Traefik,
+   or your host's load balancer) that forwards to `127.0.0.1:WEB_PORT`. Passwords and tokens must not cross the
+   internet unencrypted.
+2. **Use real secrets.** A fresh `POSTGRES_PASSWORD` and `JWT_SECRET`, kept out of version control. Changing
+   `JWT_SECRET` signs everybody out.
+3. **Create the first admin once**, then remove `BOOTSTRAP_ADMIN_*` from `.env` and run `docker compose up -d` again.
+   The bootstrap only runs when no admin exists, but there is no reason to keep the password lying around.
+4. **Decide whether to publish the API docs.** They are public by default; set `SPRINGDOC_ENABLED=false` to switch
+   off `/v3/api-docs` and Swagger UI.
+5. **Back up the database.** All data is in the `chapelbook-pgdata` volume. For example:
+   `docker compose exec postgres pg_dump -U chapelbook chapelbook > backup.sql`
+6. **Upgrade** with `git pull && docker compose up -d --build`. Flyway applies any new migrations on startup.
+
+Not included: automatic TLS certificates, log shipping, monitoring dashboards or a managed database. The backend has a
+`/actuator/health` endpoint for whatever monitoring you use.
+
+## API
+
+Interactive documentation: Swagger UI at `/swagger-ui.html`, the OpenAPI document at `/v3/api-docs`. Each operation
+lists the role it requires (generated from the same annotations that enforce it) and the errors it can return. To try
+it, call `POST /api/v1/auth/login`, copy the `accessToken`, press **Authorize** and paste it.
 
 | Endpoint | Who |
 | --- | --- |
@@ -124,24 +187,35 @@ Implemented endpoints:
 | `GET /api/v1/statistics/overview` (live counts) | librarian, admin |
 | `GET /api/v1/statistics/circulation`, `GET /api/v1/statistics/seats` (`from`, `to` UTC dates, default last 30 days, max 366) | admin |
 
-Account safety rules: student accounts always stay students; an admin cannot deactivate or demote themselves; the system
-always keeps at least one active admin, even when two admins act on each other at the same instant. A deactivated user
-is locked out on their next request. A password reset does not revoke tokens already issued (they last one hour).
+## Rules the system enforces
 
-Library rules (all configurable under `app.library` in `application.yml`): 14-day loans, 5 books at once, 2 renewals of
+Account safety: student accounts always stay students; an admin cannot deactivate or demote themselves; the system
+always keeps at least one active admin, even when two admins act on each other at the same instant. A deactivated user
+is locked out on their next request.
+
+Library policy (all configurable under `app.library` in `application.yml`): 14-day loans, 5 books at once, 2 renewals of
 14 days (not when overdue or when someone is waiting), a fine of 0.25 for each started day late capped at 10.00 per loan,
 no new loans while a book is overdue or unpaid fines are above 5.00, seat bookings of 15 minutes to 8 hours up to
-14 days ahead, 3 upcoming per student. A seat can never be double booked: the database enforces it with an exclusion
-constraint, and a student's bookings are serialised so concurrent requests cannot deadlock it.
+14 days ahead, 3 upcoming per student.
 
-How reservations work: each title has a first-come first-served queue. If a copy is on the shelf the student is
-held it for three days; otherwise they join the queue. A returned, added, cancelled or expired copy goes to the next
-student in line. Every queue change locks that title first, so concurrent requests cannot hand out a copy twice.
+Reservations: each title has a first-come first-served queue. If a copy is on the shelf the student is held it for
+three days; otherwise they join the queue. A returned, added, cancelled or expired copy goes to the next student in
+line. Every queue change locks that title first, so concurrent requests cannot hand out a copy twice.
 
-The database design, with its ER diagram and the rules PostgreSQL enforces itself (no double-booked seats, one
-open loan per copy), is in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md).
+## Known limitations
+
+- **Resetting a password does not revoke tokens already issued**; they expire after one hour.
+- **Fines are paid at the desk.** There is no online payment. Amounts are shown in euros (a constant in
+  `frontend/src/lib/format.ts`).
+- **The access token is kept in the browser's `localStorage`**, so a cross-site scripting bug would expose it. There are
+  no refresh tokens: after an hour you sign in again.
+- **No email.** There are no password-reset or reminder emails; an admin resets passwords.
+- **Report days are UTC days.** Times are stored in UTC and the app shows them in the viewer's own time zone, but the
+  daily buckets in the reports follow UTC.
+- **Accessibility and phones are only partly checked.** Automated tests use roles and labels, and every chart has a
+  hidden data table, but there has been no screen-reader testing, and the layout was only checked by hand at desktop
+  width.
 
 ## Disclaimer
 
-A learning and portfolio project using simulated data only. Not security audited and not
-production ready.
+A learning and portfolio project using simulated data only. Not security audited and not production ready.

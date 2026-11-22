@@ -41,7 +41,9 @@ function Frame({ data, xKey, series, ariaLabel, xHeader, children }: BaseProps &
           {children as React.ReactElement}
         </ResponsiveContainer>
       </div>
-      <table className="sr-only">
+      {/* sr-only on a <table> itself is not clipped by browsers, so it widens the page: clip a wrapper instead */}
+      <div className="sr-only">
+      <table>
         <caption>{ariaLabel}</caption>
         <thead>
           <tr>
@@ -64,6 +66,7 @@ function Frame({ data, xKey, series, ariaLabel, xHeader, children }: BaseProps &
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

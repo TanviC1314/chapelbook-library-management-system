@@ -1,4 +1,6 @@
-# Local development database. The backend and frontend services are added in the delivery phase.
+# ChapelBook, whole stack:   docker compose up -d --build     then open http://localhost:8081
+# Database only (for running the backend and frontend from your IDE):   docker compose up -d postgres
+# Secrets come from .env (copy .env.example). There are no default passwords or signing keys on purpose.
 services:
   postgres:
     image: postgres:16-alpine
@@ -19,6 +21,36 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./backend
+    image: chapelbook-backend
+    container_name: chapelbook-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Inside the Compose network the database is reached by service name on its internal port.
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-chapelbook}
+      DB_USERNAME: ${POSTGRES_USER:-chapelbook}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (at least 32 characters, see .env.example)}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      SPRINGDOC_ENABLED: ${SPRINGDOC_ENABLED:-true}
+    # No published port: the API is reached through the frontend's proxy, which is the only door in.
+
+  frontend:
+    build: ./frontend
+    image: chapelbook-frontend
+    container_name: chapelbook-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8081}:8080"
 
 volumes:
   chapelbook-pgdata:

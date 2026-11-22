@@ -1,5 +1,6 @@
 package com.chapelbook.statistics;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Reporting for the staff dashboards. Read-only. All dates and times are UTC. */
 @RestController
+@Tag(name = "Statistics", description = "Live overview and period reports.")
 @RequestMapping("/api/v1/statistics")
 public class StatisticsController {
 

@@ -1,5 +1,6 @@
 package com.chapelbook.book;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.chapelbook.common.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Books", description = "The catalogue: titles, search and availability.")
 @RequestMapping("/api/v1/books")
 public class BookController {
 

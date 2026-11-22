@@ -1,5 +1,6 @@
 package com.chapelbook.auth;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Authentication", description = "Register a student account and sign in.")
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 

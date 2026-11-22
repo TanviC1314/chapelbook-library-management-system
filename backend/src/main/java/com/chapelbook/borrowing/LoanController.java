@@ -1,5 +1,6 @@
 package com.chapelbook.borrowing;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.chapelbook.common.PageResponse;
 import com.chapelbook.security.AuthenticatedUser;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Loans", description = "Issuing, returning and renewing books.")
 @RequestMapping("/api/v1/loans")
 public class LoanController {
 

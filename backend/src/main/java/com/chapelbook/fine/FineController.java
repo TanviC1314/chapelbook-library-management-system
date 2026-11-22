@@ -1,5 +1,6 @@
 package com.chapelbook.fine;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.chapelbook.common.PageResponse;
 import com.chapelbook.security.AuthenticatedUser;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Fines", description = "Late fines: view, pay at the desk, waive.")
 @RequestMapping("/api/v1/fines")
 public class FineController {
 

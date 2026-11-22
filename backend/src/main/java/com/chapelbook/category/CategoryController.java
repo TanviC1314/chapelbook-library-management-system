@@ -1,5 +1,6 @@
 package com.chapelbook.category;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Categories", description = "Book categories.")
 @RequestMapping("/api/v1/categories")
 public class CategoryController {
 

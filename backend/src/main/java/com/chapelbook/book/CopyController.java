@@ -1,5 +1,6 @@
 package com.chapelbook.book;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Physical copies are staff business: students only ever see how many are available. */
 @RestController
+@Tag(name = "Copies", description = "Physical copies of a title, identified by barcode.")
 @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
 public class CopyController {
 

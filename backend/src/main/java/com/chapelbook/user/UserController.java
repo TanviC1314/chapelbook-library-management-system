@@ -1,5 +1,6 @@
 package com.chapelbook.user;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.chapelbook.common.PageResponse;
 import com.chapelbook.common.ResourceNotFoundException;
 import com.chapelbook.security.AuthenticatedUser;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Users", description = "Accounts and roles. Mostly administrator only.")
 @RequestMapping("/api/v1/users")
 public class UserController {
 

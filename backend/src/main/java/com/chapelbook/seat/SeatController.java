@@ -1,5 +1,6 @@
 package com.chapelbook.seat;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.chapelbook.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import java.time.Instant;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "Seats", description = "Study seats and their availability.")
 @RequestMapping("/api/v1/seats")
 public class SeatController {
 

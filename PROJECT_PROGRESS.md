@@ -26,9 +26,9 @@ the end of each phase.
 - [x] Reservation and cancellation
 
 ## Phase 4 – Borrowing, returns, fines and seats
-- [ ] Issue and return books
-- [ ] Fines
-- [ ] Seat booking
+- [x] Issue and return books
+- [x] Fines
+- [x] Seat booking
 
 ## Phase 5 – Admin dashboard and statistics
 - [ ] User management

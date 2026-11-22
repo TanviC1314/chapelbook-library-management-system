@@ -51,7 +51,7 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-The database, authentication, catalogue and reservations exist so far (Phases 1 to 3). You need JDK 21 and Docker.
+The database, authentication, catalogue, reservations, borrowing, fines and seat booking exist so far (Phases 1 to 4). You need JDK 21 and Docker.
 
 ```bash
 cp .env.example .env        # then set POSTGRES_PASSWORD in .env
@@ -91,6 +91,22 @@ Implemented endpoints so far:
 | `POST /api/v1/reservations`, `GET /api/v1/reservations/mine` | student |
 | `GET /api/v1/reservations` (filter by status) | librarian, admin |
 | `GET`, `DELETE /api/v1/reservations/{id}` (cancel) | owner, or librarian and admin |
+| `POST /api/v1/loans` (lend a copy by barcode), `POST /api/v1/loans/return` | librarian, admin |
+| `GET /api/v1/loans/mine`, `GET`, `POST /api/v1/loans/{id}`, `/{id}/renew` | student (own); staff for any |
+| `GET /api/v1/loans` (scope `ALL`/`ACTIVE`/`OVERDUE`, `userId`) | librarian, admin |
+| `GET /api/v1/fines/mine`, `/mine/balance` | student |
+| `GET /api/v1/fines`, `POST /api/v1/fines/{id}/pay` | librarian, admin |
+| `POST /api/v1/fines/{id}/waive` | admin |
+| `GET /api/v1/seats` (zone, free-in-window `from`/`to`) | any signed-in user |
+| `POST`, `PUT /api/v1/seats` | librarian, admin |
+| `POST /api/v1/seat-bookings`, `GET /api/v1/seat-bookings/mine` | student |
+| `DELETE /api/v1/seat-bookings/{id}`, `GET /api/v1/seat-bookings` | owner or staff; list is staff |
+
+Library rules (all configurable under `app.library` in `application.yml`): 14-day loans, 5 books at once, 2 renewals of
+14 days (not when overdue or when someone is waiting), a fine of 0.25 for each started day late capped at 10.00 per loan,
+no new loans while a book is overdue or unpaid fines are above 5.00, seat bookings of 15 minutes to 8 hours up to
+14 days ahead, 3 upcoming per student. A seat can never be double booked: the database enforces it with an exclusion
+constraint, and a student's bookings are serialised so concurrent requests cannot deadlock it.
 
 How reservations work: each title has a first-come first-served queue. If a copy is on the shelf the student is
 held it for three days; otherwise they join the queue. A returned, added, cancelled or expired copy goes to the next

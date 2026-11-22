@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { count, daysUntil, describeDue, formatDate, formatDateTime, formatDay, formatHour, formatMoney, plural } from './format'
+import { count, daysUntil, describeDue, formatDate, formatDateTime, formatDay, formatHour, formatHours, formatMoney, plural } from './format'
 
 describe('plural', () => {
   it.each([
@@ -65,5 +65,13 @@ describe('chart labels', () => {
     expect(formatHour(9)).toBe('09:00')
     expect(formatHour(0)).toBe('00:00')
     expect(formatHour(23)).toBe('23:00')
+  })
+})
+
+describe('formatHours', () => {
+  it('shows one decimal place', () => {
+    expect(formatHours(6.5)).toBe('6.5 h')
+    expect(formatHours(0)).toBe('0.0 h')
+    expect(formatHours(11.456)).toBe('11.5 h')
   })
 })

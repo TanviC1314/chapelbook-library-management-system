@@ -65,3 +65,8 @@ export function formatDay(isoDate: string): string {
 export function formatHour(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`
 }
+
+/** Hours with one decimal place, for booked time: "6.5 h". */
+export function formatHours(hours: number): string {
+  return `${hours.toFixed(1)} h`
+}

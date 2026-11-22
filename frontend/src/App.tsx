@@ -23,6 +23,7 @@ const StaffFinesPage = lazy(() => import('./features/librarian/StaffFinesPage'))
 const StaffSeatsPage = lazy(() => import('./features/librarian/StaffSeatsPage'))
 const UsersPage = lazy(() => import('./features/admin/UsersPage'))
 const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard'))
+const AdminReportsPage = lazy(() => import('./features/admin/AdminReportsPage'))
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
           <Route element={<RequireRole roles={['ADMIN']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/reports" element={<AdminReportsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>

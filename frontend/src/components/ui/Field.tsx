@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 interface FieldProps {
   label: string
@@ -74,6 +74,31 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
       >
         {children}
       </select>
+    </Field>
+  )
+})
+
+interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string
+  id: string
+  error?: string
+  hint?: string
+}
+
+export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(function TextAreaField(
+  { label, id, error, hint, className = '', ...rest },
+  ref,
+) {
+  return (
+    <Field label={label} htmlFor={id} error={error} hint={hint}>
+      <textarea
+        ref={ref}
+        id={id}
+        rows={3}
+        aria-invalid={error ? true : undefined}
+        className={`${controlClasses} ${error ? 'ring-red-400' : 'ring-slate-300'} ${className}`}
+        {...rest}
+      />
     </Field>
   )
 })

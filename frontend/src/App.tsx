@@ -19,6 +19,8 @@ const LibrarianDashboard = lazy(() => import('./features/librarian/LibrarianDash
 const ManageBooksPage = lazy(() => import('./features/librarian/ManageBooksPage'))
 const CopiesPage = lazy(() => import('./features/librarian/CopiesPage'))
 const DeskPage = lazy(() => import('./features/librarian/DeskPage'))
+const StaffReservationsPage = lazy(() => import('./features/librarian/StaffReservationsPage'))
+const StaffFinesPage = lazy(() => import('./features/librarian/StaffFinesPage'))
 
 export default function App() {
   return (
@@ -44,6 +46,8 @@ export default function App() {
             <Route path="/librarian/books" element={<ManageBooksPage />} />
             <Route path="/librarian/books/:id" element={<CopiesPage />} />
             <Route path="/librarian/desk" element={<DeskPage />} />
+            <Route path="/librarian/reservations" element={<StaffReservationsPage />} />
+            <Route path="/librarian/fines" element={<StaffFinesPage />} />
           </Route>
           <Route element={<RequireRole roles={['ADMIN']} />}>
             <Route path="/admin" element={<PortalHome />} />

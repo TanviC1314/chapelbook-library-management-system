@@ -65,6 +65,10 @@ public class LibrarySeat extends AuditedEntity {
         this.status = status;
     }
 
+    public void setLabel(String label) {
+        this.label = label.trim();
+    }
+
     public void setZone(String zone) {
         this.zone = zone.trim();
     }

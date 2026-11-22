@@ -31,8 +31,8 @@ the end of each phase.
 - [x] Seat booking
 
 ## Phase 5 – Admin dashboard and statistics
-- [ ] User management
-- [ ] Library statistics
+- [x] User management
+- [x] Library statistics
 
 ## Phase 6 – Frontend
 - [ ] Setup, authentication pages and layout

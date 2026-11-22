@@ -51,7 +51,7 @@ React frontend talks to the backend only through the REST API.
 
 ## Getting started
 
-The database, authentication, catalogue, reservations, borrowing, fines and seat booking exist so far (Phases 1 to 4). You need JDK 21 and Docker.
+The database, authentication, catalogue, reservations, borrowing, fines, seat booking and the admin dashboard data exist so far (Phases 1 to 5). You need JDK 21 and Docker.
 
 ```bash
 cp .env.example .env        # then set POSTGRES_PASSWORD in .env
@@ -81,7 +81,8 @@ Implemented endpoints so far:
 | `POST /api/v1/auth/register` (creates a student) | anyone |
 | `POST /api/v1/auth/login` | anyone |
 | `GET /api/v1/users/me` | any signed-in user |
-| `GET /api/v1/users` (filter by role, paged) | librarian, admin |
+| `GET /api/v1/users` (search `q`, filter `role` and `active`, paged), `GET /api/v1/users/{id}` | librarian, admin |
+| `PATCH /api/v1/users/{id}` (rename, activate or deactivate, LIBRARIAN to ADMIN and back), `POST /api/v1/users/{id}/password` | admin |
 | `POST /api/v1/users` (create an account with a role) | admin |
 | `GET /api/v1/categories` | any signed-in user |
 | `POST`, `PUT`, `DELETE /api/v1/categories` | librarian, admin |
@@ -101,6 +102,12 @@ Implemented endpoints so far:
 | `POST`, `PUT /api/v1/seats` | librarian, admin |
 | `POST /api/v1/seat-bookings`, `GET /api/v1/seat-bookings/mine` | student |
 | `DELETE /api/v1/seat-bookings/{id}`, `GET /api/v1/seat-bookings` | owner or staff; list is staff |
+| `GET /api/v1/statistics/overview` (live counts) | librarian, admin |
+| `GET /api/v1/statistics/circulation`, `GET /api/v1/statistics/seats` (`from`, `to` UTC dates, default last 30 days, max 366) | admin |
+
+Account safety rules: student accounts always stay students; an admin cannot deactivate or demote themselves; the system
+always keeps at least one active admin, even when two admins act on each other at the same instant. A deactivated user
+is locked out on their next request. A password reset does not revoke tokens already issued (they last one hour).
 
 Library rules (all configurable under `app.library` in `application.yml`): 14-day loans, 5 books at once, 2 renewals of
 14 days (not when overdue or when someone is waiting), a fine of 0.25 for each started day late capped at 10.00 per loan,

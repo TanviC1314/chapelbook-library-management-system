@@ -1,6 +1,7 @@
 package com.chapelbook.statistics;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -55,6 +56,51 @@ public class StatisticsService {
                 new CirculationStatsResponse.Totals(totalIssued, totalReturned, repository.returnedLate(start, end),
                         repository.distinctBorrowers(start, end), totalFines, totalFineAmount),
                 daily, repository.topBooks(start, end, TOP_BOOKS), repository.loansByCategory(start, end));
+    }
+
+    /** Seat bookings and booked hours per day and per zone, and which hours of the day are busiest. */
+    @Transactional(readOnly = true)
+    public SeatStatsResponse seats(LocalDate from, LocalDate to) {
+        DateRange range = DateRange.resolve(from, to, LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC));
+        Instant start = range.start();
+        Instant end = range.endExclusive();
+        Map<LocalDate, Object[]> perDay = repository.seatBookingsPerDay(start, end);
+
+        List<SeatStatsResponse.Day> daily = new ArrayList<>();
+        long totalBookings = 0;
+        BigDecimal totalHours = BigDecimal.ZERO.setScale(2);
+        for (LocalDate day : range.days()) {
+            Object[] row = perDay.get(day);
+            long bookings = row == null ? 0 : (Long) row[0];
+            BigDecimal hours = row == null ? BigDecimal.ZERO.setScale(2) : hours((BigDecimal) row[1]);
+            daily.add(new SeatStatsResponse.Day(day, bookings, hours));
+            totalBookings += bookings;
+            totalHours = totalHours.add(hours);
+        }
+
+        long days = range.days().size();
+        List<SeatStatsResponse.Zone> zones = new ArrayList<>();
+        for (Object[] row : repository.seatUsageByZone(start, end)) {
+            long seatsInService = (Long) row[1];
+            BigDecimal hours = hours((BigDecimal) row[3]);
+            BigDecimal average = seatsInService == 0 ? BigDecimal.ZERO.setScale(2)
+                    : hours.divide(BigDecimal.valueOf(seatsInService * days), 2, RoundingMode.HALF_UP);
+            zones.add(new SeatStatsResponse.Zone((String) row[0], seatsInService, (Long) row[2], hours, average));
+        }
+
+        Map<Integer, Long> activePerHour = repository.bookingsActivePerHourOfDay(start, end);
+        List<SeatStatsResponse.Hour> peakHours = new ArrayList<>();
+        for (int hour = 0; hour < 24; hour++) {
+            peakHours.add(new SeatStatsResponse.Hour(hour, activePerHour.getOrDefault(hour, 0L)));
+        }
+        return new SeatStatsResponse(range.from(), range.to(),
+                new SeatStatsResponse.Totals(totalBookings, repository.cancelledSeatBookings(start, end), totalHours,
+                        repository.distinctSeatStudents(start, end), repository.seatsInService()),
+                daily, zones, peakHours);
+    }
+
+    private static BigDecimal hours(BigDecimal raw) {
+        return raw.setScale(2, RoundingMode.HALF_UP);
     }
 
     /** Live dashboard numbers. Read-only, and every figure comes straight from the database. */

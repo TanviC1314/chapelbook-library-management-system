@@ -38,4 +38,16 @@ public class StatisticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return statistics.circulation(from, to);
     }
+
+    /**
+     * Admin report: seat bookings and booked hours per day and per zone, plus the busiest hours of the day.
+     * Same {@code from} / {@code to} rules as the circulation report.
+     */
+    @GetMapping("/seats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public SeatStatsResponse seats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return statistics.seats(from, to);
+    }
 }

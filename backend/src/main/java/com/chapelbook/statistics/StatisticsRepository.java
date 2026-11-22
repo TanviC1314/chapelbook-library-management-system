@@ -169,4 +169,69 @@ public class StatisticsRepository {
         }, utc(from), utc(to));
         return result;
     }
+
+    // ---------------------------------------------------------------- seat report
+
+    /** Per UTC day (of the start time): booking count and booked hours. Only BOOKED bookings. */
+    Map<LocalDate, Object[]> seatBookingsPerDay(Instant from, Instant to) {
+        Map<LocalDate, Object[]> result = new HashMap<>();
+        jdbc.query("""
+                SELECT (starts_at AT TIME ZONE 'UTC')::date, count(*),
+                       coalesce(sum(extract(epoch FROM (ends_at - starts_at))) / 3600.0, 0)
+                FROM seat_bookings
+                WHERE status = 'BOOKED' AND starts_at >= ? AND starts_at < ?
+                GROUP BY 1
+                """, rs -> {
+                    result.put(rs.getObject(1, LocalDate.class), new Object[] {rs.getLong(2), rs.getBigDecimal(3)});
+                }, utc(from), utc(to));
+        return result;
+    }
+
+    long cancelledSeatBookings(Instant from, Instant to) {
+        return count("SELECT count(*) FROM seat_bookings WHERE status = 'CANCELLED' AND starts_at >= ? AND starts_at < ?",
+                utc(from), utc(to));
+    }
+
+    long distinctSeatStudents(Instant from, Instant to) {
+        return count("SELECT count(DISTINCT user_id) FROM seat_bookings "
+                + "WHERE status = 'BOOKED' AND starts_at >= ? AND starts_at < ?", utc(from), utc(to));
+    }
+
+    long seatsInService() {
+        return count("SELECT count(*) FROM library_seats WHERE status = 'ACTIVE'");
+    }
+
+    /** Every zone (including ones with no bookings): seats in service, bookings and booked hours. */
+    List<Object[]> seatUsageByZone(Instant from, Instant to) {
+        return jdbc.query("""
+                SELECT s.zone,
+                       count(DISTINCT s.id) FILTER (WHERE s.status = 'ACTIVE') AS seats,
+                       count(b.id) AS bookings,
+                       coalesce(sum(extract(epoch FROM (b.ends_at - b.starts_at))) / 3600.0, 0) AS hours
+                FROM library_seats s
+                LEFT JOIN seat_bookings b ON b.seat_id = s.id AND b.status = 'BOOKED'
+                     AND b.starts_at >= ? AND b.starts_at < ?
+                GROUP BY s.zone
+                ORDER BY hours DESC, s.zone
+                """, (rs, i) -> new Object[] {rs.getString(1), rs.getLong(2), rs.getLong(3), rs.getBigDecimal(4)},
+                utc(from), utc(to));
+    }
+
+    /** For each hour of the day (UTC), how many bookings were active during it, summed over the range. */
+    Map<Integer, Long> bookingsActivePerHourOfDay(Instant from, Instant to) {
+        Map<Integer, Long> result = new HashMap<>();
+        jdbc.query("""
+                SELECT extract(hour FROM h)::int AS hr, count(*)
+                FROM seat_bookings b
+                CROSS JOIN LATERAL generate_series(
+                        date_trunc('hour', b.starts_at AT TIME ZONE 'UTC'),
+                        (b.ends_at AT TIME ZONE 'UTC') - interval '1 microsecond',
+                        interval '1 hour') AS h
+                WHERE b.status = 'BOOKED' AND b.starts_at >= ? AND b.starts_at < ?
+                GROUP BY 1
+                """, rs -> {
+                    result.put(rs.getInt(1), rs.getLong(2));
+                }, utc(from), utc(to));
+        return result;
+    }
 }

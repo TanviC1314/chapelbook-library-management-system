@@ -5,6 +5,8 @@ FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
+# A checkout from Windows can lose the executable bit, so set it here rather than trust the build context.
+RUN chmod +x mvnw
 # Download dependencies first so this layer is cached until the pom changes.
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -q dependency:go-offline
 COPY src src

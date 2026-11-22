@@ -14,6 +14,7 @@ const MyReservationsPage = lazy(() => import('./features/student/MyReservationsP
 const MyBorrowingsPage = lazy(() => import('./features/student/MyBorrowingsPage'))
 const MyFinesPage = lazy(() => import('./features/student/MyFinesPage'))
 const StudentSeatsPage = lazy(() => import('./features/student/StudentSeatsPage'))
+const StudentDashboard = lazy(() => import('./features/student/StudentDashboard'))
 
 export default function App() {
   return (
@@ -28,7 +29,7 @@ export default function App() {
           <Route path="/catalogue" element={<CataloguePage />} />
           <Route path="/catalogue/:id" element={<BookDetailPage />} />
           <Route element={<RequireRole roles={['STUDENT']} />}>
-            <Route path="/student" element={<PortalHome />} />
+            <Route path="/student" element={<StudentDashboard />} />
             <Route path="/student/reservations" element={<MyReservationsPage />} />
             <Route path="/student/borrowings" element={<MyBorrowingsPage />} />
             <Route path="/student/fines" element={<MyFinesPage />} />

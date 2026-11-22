@@ -3,12 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { tokenStore } from './auth/tokenStore'
 import type { Role } from './api/types'
-import { json, makeToken, makeUser, mockApi, problem, renderApp } from './test/utils'
+import { json, makeToken, makeUser, mockApi, page, problem, renderApp } from './test/utils'
 
 /** The whole app with a stored session, as after a page reload. */
 function renderSignedIn(role: Role, route: string) {
   tokenStore.set(makeToken())
-  mockApi({ 'GET /users/me': json(makeUser(role)) })
+  mockApi({
+    'GET /users/me': json(makeUser(role)),
+    // what the student dashboard asks for on arrival
+    'GET /loans/mine': json(page([])),
+    'GET /reservations/mine': json(page([])),
+    'GET /fines/mine/balance': json({ unpaid: 0, borrowingBlockedAbove: 5, blocked: false }),
+    'GET /seat-bookings/mine': json(page([])),
+  })
   return renderApp(<App />, { route })
 }
 
@@ -27,7 +34,7 @@ describe('App routing and role access', () => {
     renderSignedIn('STUDENT', '/')
 
     expect(await screen.findByRole('heading', { name: 'Welcome, Test student' })).toBeInTheDocument()
-    expect(screen.getByText('Student portal')).toBeInTheDocument()
+    expect(await screen.findByText('You have no books on loan.')).toBeInTheDocument() // the student dashboard, not a placeholder
   })
 
   it('forgets a stored session the server no longer accepts', async () => {

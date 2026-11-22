@@ -43,5 +43,5 @@ the end of each phase.
 ## Phase 7 – Quality and delivery
 - [x] OpenAPI documentation
 - [x] Dockerfiles and full-stack Compose
-- [ ] GitHub Actions CI
+- [x] GitHub Actions CI
 - [x] Final README and deployment instructions

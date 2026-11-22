@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { count, daysUntil, describeDue, formatDate, formatDateTime, formatMoney, plural } from './format'
+import { count, daysUntil, describeDue, formatDate, formatDateTime, formatDay, formatHour, formatMoney, plural } from './format'
 
 describe('plural', () => {
   it.each([
@@ -51,5 +51,19 @@ describe('due dates', () => {
     ['2030-03-07T12:00:00Z', '3 days overdue'],
   ])('%s -> %s', (iso, expected) => {
     expect(describeDue(iso, now)).toBe(expected)
+  })
+})
+
+describe('chart labels', () => {
+  it('shows a backend date as a short day and month, without drifting across time zones', () => {
+    expect(formatDay('2030-03-05')).toMatch(/5/)
+    expect(formatDay('2030-03-05')).toMatch(/Mar|3/)
+    expect(formatDay('2030-12-31')).toMatch(/31/)
+  })
+
+  it('pads an hour', () => {
+    expect(formatHour(9)).toBe('09:00')
+    expect(formatHour(0)).toBe('00:00')
+    expect(formatHour(23)).toBe('23:00')
   })
 })

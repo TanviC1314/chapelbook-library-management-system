@@ -4,6 +4,7 @@ import App from './App'
 import { tokenStore } from './auth/tokenStore'
 import type { Role } from './api/types'
 import { makeOverview } from './test/overview'
+import { makeCirculationStats, makeSeatStats } from './test/stats'
 import { json, makeToken, makeUser, mockApi, page, problem, renderApp } from './test/utils'
 
 /** The whole app with a stored session, as after a page reload. */
@@ -19,6 +20,9 @@ function renderSignedIn(role: Role, route: string) {
     // and the librarian dashboard
     'GET /statistics/overview': json(makeOverview()),
     'GET /loans': json(page([])),
+    // and the administrator dashboard's charts
+    'GET /statistics/circulation': json(makeCirculationStats()),
+    'GET /statistics/seats': json(makeSeatStats()),
   })
   return renderApp(<App />, { route })
 }
@@ -77,7 +81,9 @@ describe('App routing and role access', () => {
   ] as const)('lets a %s open %s', async (role, route) => {
     renderSignedIn(role, route)
 
-    expect(await screen.findByRole('heading', { name: /^Welcome, / })).toBeInTheDocument()
+    // The first visit loads the page's code on demand (the admin pages include the charting library), which can
+    // take a few seconds the first time in a fresh test process.
+    expect(await screen.findByRole('heading', { name: /^Welcome, / }, { timeout: 8000 })).toBeInTheDocument()
   })
 
   it('keeps a signed-in user off the login page', async () => {

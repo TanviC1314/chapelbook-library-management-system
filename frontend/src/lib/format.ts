@@ -55,3 +55,13 @@ export function describeDue(iso: string, now: number = Date.now()): string {
   const late = Math.abs(days)
   return `${late} ${late === 1 ? 'day' : 'days'} overdue`
 }
+
+/** A calendar day from the backend ("2030-03-05", always UTC) as "5 Mar", for chart axes. */
+export function formatDay(isoDate: string): string {
+  return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${isoDate}T00:00:00Z`))
+}
+
+/** An hour of the day (0 to 23) as "09:00". */
+export function formatHour(hour: number): string {
+  return `${String(hour).padStart(2, '0')}:00`
+}

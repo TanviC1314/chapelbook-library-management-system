@@ -4,7 +4,6 @@ import { HomeRedirect, ProtectedRoute, PublicOnlyRoute, RequireRole } from './au
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
-import PortalHome from './features/home/PortalHome'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Pages load on demand so the login screen's download stays small.
@@ -23,6 +22,7 @@ const StaffReservationsPage = lazy(() => import('./features/librarian/StaffReser
 const StaffFinesPage = lazy(() => import('./features/librarian/StaffFinesPage'))
 const StaffSeatsPage = lazy(() => import('./features/librarian/StaffSeatsPage'))
 const UsersPage = lazy(() => import('./features/admin/UsersPage'))
+const AdminDashboard = lazy(() => import('./features/admin/AdminDashboard'))
 
 export default function App() {
   return (
@@ -53,7 +53,7 @@ export default function App() {
             <Route path="/librarian/seats" element={<StaffSeatsPage />} />
           </Route>
           <Route element={<RequireRole roles={['ADMIN']} />}>
-            <Route path="/admin" element={<PortalHome />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

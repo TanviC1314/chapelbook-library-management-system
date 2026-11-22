@@ -83,6 +83,10 @@ public class User extends AuditedEntity {
         return active;
     }
 
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     public void setActive(boolean active) {
         this.active = active;
     }

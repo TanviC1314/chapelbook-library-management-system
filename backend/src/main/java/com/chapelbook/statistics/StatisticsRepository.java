@@ -3,8 +3,10 @@ package com.chapelbook.statistics;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -97,5 +99,74 @@ public class StatisticsRepository {
                 count("SELECT count(*) FROM seat_bookings WHERE status = 'BOOKED' AND ends_at > ?", utc(now)),
                 count("SELECT count(*) FROM seat_bookings WHERE status = 'BOOKED' AND starts_at >= ? AND starts_at < ?",
                         utc(startOfToday), utc(startOfTomorrow)));
+    }
+
+    // ---------------------------------------------------------------- circulation report
+
+    /** (UTC day, count) pairs for loans issued in [from, to). Only days that had loans appear. */
+    Map<LocalDate, Long> loansIssuedPerDay(Instant from, Instant to) {
+        return perDay("SELECT (borrowed_at AT TIME ZONE 'UTC')::date, count(*) FROM borrow_records "
+                + "WHERE borrowed_at >= ? AND borrowed_at < ? GROUP BY 1", from, to);
+    }
+
+    Map<LocalDate, Long> loansReturnedPerDay(Instant from, Instant to) {
+        return perDay("SELECT (returned_at AT TIME ZONE 'UTC')::date, count(*) FROM borrow_records "
+                + "WHERE returned_at >= ? AND returned_at < ? GROUP BY 1", from, to);
+    }
+
+    /** Fines raised per day: count and total amount. */
+    Map<LocalDate, Object[]> finesPerDay(Instant from, Instant to) {
+        Map<LocalDate, Object[]> result = new HashMap<>();
+        jdbc.query("SELECT (assessed_at AT TIME ZONE 'UTC')::date, count(*), coalesce(sum(amount), 0) FROM fines "
+                + "WHERE assessed_at >= ? AND assessed_at < ? GROUP BY 1", rs -> {
+                    result.put(rs.getObject(1, LocalDate.class), new Object[] {rs.getLong(2), rs.getBigDecimal(3)});
+                }, utc(from), utc(to));
+        return result;
+    }
+
+    long returnedLate(Instant from, Instant to) {
+        return count("SELECT count(*) FROM borrow_records WHERE returned_at >= ? AND returned_at < ? "
+                + "AND returned_at > due_at", utc(from), utc(to));
+    }
+
+    long distinctBorrowers(Instant from, Instant to) {
+        return count("SELECT count(DISTINCT user_id) FROM borrow_records WHERE borrowed_at >= ? AND borrowed_at < ?",
+                utc(from), utc(to));
+    }
+
+    List<CirculationStatsResponse.TopBook> topBooks(Instant from, Instant to, int limit) {
+        return jdbc.query("""
+                SELECT bk.id, bk.title, bk.author, count(*) AS loans
+                FROM borrow_records b
+                JOIN book_copies c ON c.id = b.copy_id
+                JOIN books bk ON bk.id = c.book_id
+                WHERE b.borrowed_at >= ? AND b.borrowed_at < ?
+                GROUP BY bk.id, bk.title, bk.author
+                ORDER BY loans DESC, bk.title, bk.id
+                LIMIT ?
+                """, (rs, i) -> new CirculationStatsResponse.TopBook(rs.getLong(1), rs.getString(2), rs.getString(3),
+                rs.getLong(4)), utc(from), utc(to), limit);
+    }
+
+    List<CirculationStatsResponse.CategoryLoans> loansByCategory(Instant from, Instant to) {
+        return jdbc.query("""
+                SELECT cat.id, cat.name, count(*) AS loans
+                FROM borrow_records b
+                JOIN book_copies c ON c.id = b.copy_id
+                JOIN books bk ON bk.id = c.book_id
+                JOIN categories cat ON cat.id = bk.category_id
+                WHERE b.borrowed_at >= ? AND b.borrowed_at < ?
+                GROUP BY cat.id, cat.name
+                ORDER BY loans DESC, cat.name, cat.id
+                """, (rs, i) -> new CirculationStatsResponse.CategoryLoans(rs.getLong(1), rs.getString(2), rs.getLong(3)),
+                utc(from), utc(to));
+    }
+
+    private Map<LocalDate, Long> perDay(String sql, Instant from, Instant to) {
+        Map<LocalDate, Long> result = new HashMap<>();
+        jdbc.query(sql, rs -> {
+            result.put(rs.getObject(1, LocalDate.class), rs.getLong(2));
+        }, utc(from), utc(to));
+        return result;
     }
 }

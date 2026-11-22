@@ -1,8 +1,11 @@
 package com.chapelbook.statistics;
 
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Reporting for the staff dashboards. Read-only. All dates and times are UTC. */
@@ -21,5 +24,18 @@ public class StatisticsController {
     @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     public OverviewResponse overview() {
         return statistics.overview();
+    }
+
+    /**
+     * Admin report: loans issued and returned per day, fines raised, most borrowed titles and loans per category.
+     * {@code from} and {@code to} are inclusive UTC dates (yyyy-MM-dd); the default is the last 30 days, the
+     * maximum a year.
+     */
+    @GetMapping("/circulation")
+    @PreAuthorize("hasRole('ADMIN')")
+    public CirculationStatsResponse circulation(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return statistics.circulation(from, to);
     }
 }

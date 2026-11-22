@@ -85,7 +85,7 @@ export default function StudentSeatsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card title="When do you need a seat?">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-4">
               <TextField id="start" label="Start" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
               <TextField id="end" label="End" type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
               <SelectField id="zone" label="Zone" value={zone} onChange={(e) => setZone(e.target.value)}>

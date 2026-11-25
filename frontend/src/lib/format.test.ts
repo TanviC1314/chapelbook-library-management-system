@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { count, daysUntil, describeDue, formatDate, formatDateTime, formatDay, formatHour, formatHours, formatMoney, plural } from './format'
+import { count, daysUntil, describeDue, formatDate, formatDateTime, formatDay, formatHour, formatHours, formatMoney, isDueSoon, plural } from './format'
 
 describe('plural', () => {
   it.each([
@@ -73,5 +73,25 @@ describe('formatHours', () => {
     expect(formatHours(6.5)).toBe('6.5 h')
     expect(formatHours(0)).toBe('0.0 h')
     expect(formatHours(11.456)).toBe('11.5 h')
+  })
+})
+
+describe('isDueSoon', () => {
+  const now = Date.parse('2030-03-10T12:00:00Z')
+
+  it.each([
+    ['2030-03-10T18:00:00Z', true], // later today
+    ['2030-03-11T12:00:00Z', true], // tomorrow
+    ['2030-03-12T12:00:00Z', true], // in two days
+    ['2030-03-12T12:00:01Z', false], // just over two days away
+    ['2030-03-20T12:00:00Z', false],
+    ['2030-03-09T11:00:00Z', false], // a day or more late is overdue, not "soon"
+  ])('%s is due soon: %s', (iso, expected) => {
+    expect(isDueSoon(iso, now)).toBe(expected)
+  })
+
+  it('takes the window as a parameter', () => {
+    expect(isDueSoon('2030-03-14T12:00:00Z', now, 5)).toBe(true)
+    expect(isDueSoon('2030-03-14T12:00:00Z', now, 3)).toBe(false)
   })
 })

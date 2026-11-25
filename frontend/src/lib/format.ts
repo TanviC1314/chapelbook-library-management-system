@@ -46,6 +46,12 @@ export function daysUntil(iso: string, now: number = Date.now()): number {
   return Math.ceil((new Date(iso).getTime() - now) / DAY_MS)
 }
 
+/** True when a loan is still on time but falls due within the next `withinDays` days (default 2), today included. */
+export function isDueSoon(iso: string, now: number = Date.now(), withinDays = 2): boolean {
+  const days = daysUntil(iso, now)
+  return days >= 0 && days <= withinDays
+}
+
 /** "due today", "due in 3 days", "2 days overdue". */
 export function describeDue(iso: string, now: number = Date.now()): string {
   const days = daysUntil(iso, now)

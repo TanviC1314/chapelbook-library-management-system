@@ -45,3 +45,8 @@ the end of each phase.
 - [x] Dockerfiles and full-stack Compose
 - [x] GitHub Actions CI
 - [x] Final README and deployment instructions
+
+## Daily improvements
+Small follow-up features, one or two commits each.
+
+- [x] 2026-11-25 Highlight loans due within two days on My borrowings

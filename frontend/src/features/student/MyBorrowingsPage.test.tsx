@@ -37,6 +37,15 @@ describe('MyBorrowingsPage', () => {
     expect(new URL(String(api.fetchMock.mock.calls.find((c) => String(c[0]).includes('/loans/mine'))![0]), 'http://x').searchParams.get('activeOnly')).toBe('true')
   })
 
+  it('shows a book due within two days in amber, and one with more time in the normal colour', async () => {
+    renderPage({
+      'GET /loans/mine': json(page([makeLoan({ id: 1, dueAt: inDays(1) }), makeLoan({ id: 2, bookTitle: 'Sapiens', dueAt: inDays(9) })])),
+    })
+
+    expect(await screen.findByText(/due tomorrow/)).toHaveClass('text-amber-700')
+    expect(screen.getByText(/due in 9 days/)).toHaveClass('text-slate-600')
+  })
+
   it('warns about an overdue book in red, explains what to do, and offers no renewal', async () => {
     renderPage({ 'GET /loans/mine': json(page([makeLoan({ status: 'OVERDUE', dueAt: inDays(-3) })])) })
 

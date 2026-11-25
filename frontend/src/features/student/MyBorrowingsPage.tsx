@@ -10,13 +10,20 @@ import { Pagination } from '../../components/ui/Pagination'
 import { EmptyState, ErrorState, Skeleton } from '../../components/ui/States'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { useToast } from '../../components/ui/Toast'
-import { describeDue, formatDate, formatMoney } from '../../lib/format'
+import { describeDue, formatDate, formatMoney, isDueSoon } from '../../lib/format'
 
 const PAGE_SIZE = 10
 
 function when(loan: Loan): string {
   if (loan.status === 'RETURNED') return `Returned on ${formatDate(loan.returnedAt!)}`
   return `Due ${formatDate(loan.dueAt)} (${describeDue(loan.dueAt)})`
+}
+
+/** Red when overdue, amber when due within two days, plain otherwise. */
+function dueClass(loan: Loan): string {
+  if (loan.status === 'OVERDUE') return 'font-medium text-red-700'
+  if (loan.status === 'ACTIVE' && isDueSoon(loan.dueAt)) return 'font-medium text-amber-700'
+  return 'text-slate-600'
 }
 
 /** "My Borrowings": what the student has out now, or everything they ever borrowed. */
@@ -97,7 +104,7 @@ export default function MyBorrowingsPage() {
                     <Link to={`/catalogue/${loan.bookId}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
                       {loan.bookTitle}
                     </Link>
-                    <p className={`mt-1 text-sm ${loan.status === 'OVERDUE' ? 'font-medium text-red-700' : 'text-slate-600'}`}>{when(loan)}</p>
+                    <p className={`mt-1 text-sm ${dueClass(loan)}`}>{when(loan)}</p>
                     <p className="mt-1 text-xs text-slate-400">
                       Borrowed {formatDate(loan.borrowedAt)} · copy {loan.copyBarcode}
                       {loan.renewalCount > 0 ? ` · renewed ${loan.renewalCount} ${loan.renewalCount === 1 ? 'time' : 'times'}` : ''}

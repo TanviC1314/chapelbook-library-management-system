@@ -13,6 +13,7 @@ import { AvailabilityPill } from '../../components/ui/AvailabilityPill'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { CopyButton } from '../../components/ui/CopyButton'
 import { TextField } from '../../components/ui/Field'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -137,7 +138,12 @@ export default function CopiesPage() {
                   const locked = lockedReason(copy.status)
                   return (
                     <tr key={copy.id}>
-                      <td className="px-5 py-3 font-mono text-slate-900">{copy.barcode}</td>
+                      <td className="px-5 py-3 font-mono text-slate-900">
+                        <div className="flex items-center gap-1">
+                          <span>{copy.barcode}</span>
+                          <CopyButton value={copy.barcode} label={`Copy barcode ${copy.barcode}`} />
+                        </div>
+                      </td>
                       <td className="px-3 py-3">
                         <StatusBadge status={copy.status} />
                         {locked && <p className="mt-1 text-xs text-slate-500">{locked}</p>}

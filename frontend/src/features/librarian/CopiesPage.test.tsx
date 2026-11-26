@@ -42,6 +42,15 @@ describe('CopiesPage', () => {
     expect(screen.getByText('On loan: take it back at the issue and return desk.')).toBeInTheDocument()
   })
 
+  it('copies a barcode to the clipboard from its row', async () => {
+    const user = userEvent.setup()
+    renderPage([makeCopy(), makeCopy({ id: 101, barcode: 'CB-0002' })])
+
+    await user.click(await screen.findByRole('button', { name: 'Copy barcode CB-0002' }))
+
+    expect(await navigator.clipboard.readText()).toBe('CB-0002')
+  })
+
   it('only offers the status changes the backend allows for each status', async () => {
     renderPage([
       makeCopy({ id: 1, barcode: 'AV', status: 'AVAILABLE' }),

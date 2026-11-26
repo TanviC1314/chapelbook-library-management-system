@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { catalogueApi, type BookSort } from '../../api/catalogue'
 import { AvailabilityPill } from '../../components/ui/AvailabilityPill'
+import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { SelectField, TextField } from '../../components/ui/Field'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -42,6 +43,13 @@ export default function CataloguePage() {
     }
     if (resetPage) next.delete('page')
     setParams(next, { replace: true })
+  }
+
+  const filtered = text.trim() !== '' || q !== '' || categoryId !== undefined || availableOnly || sort !== 'TITLE'
+
+  function clearFilters() {
+    setText('')
+    setParams({}, { replace: true })
   }
 
   // Write the typed text into the address once the person pauses typing.
@@ -95,15 +103,22 @@ export default function CataloguePage() {
             ))}
           </SelectField>
         </div>
-        <label className="mt-4 flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={availableOnly}
-            onChange={(event) => update({ availableOnly: event.target.checked ? 'true' : undefined })}
-            className="h-4 w-4 rounded border-slate-300 text-brand-700 focus:ring-brand-600"
-          />
-          Only show books available now
-        </label>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={availableOnly}
+              onChange={(event) => update({ availableOnly: event.target.checked ? 'true' : undefined })}
+              className="h-4 w-4 rounded border-slate-300 text-brand-700 focus:ring-brand-600"
+            />
+            Only show books available now
+          </label>
+          {filtered && (
+            <Button variant="secondary" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
       </Card>
 
       {books.isPending ? (

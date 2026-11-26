@@ -139,4 +139,27 @@ describe('CataloguePage', () => {
     expect(url.searchParams.get('sort')).toBe('TITLE')
     expect(url.searchParams.get('page')).toBe('0') // a negative page is clamped to the first page
   })
+
+  it('offers to clear filters only when something is filtered, and then resets the search, boxes and address', async () => {
+    const mock = api(json(page([makeBook()])))
+    renderCatalogue('/catalogue?q=martin&availableOnly=true&sort=AUTHOR&page=1')
+    await screen.findByText('Clean Code')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+
+    expect(screen.getByTestId('where')).toHaveTextContent(/^\/catalogue$/)
+    expect(screen.getByLabelText('Search')).toHaveValue('')
+    expect(screen.getByLabelText('Sort by')).toHaveValue('TITLE')
+    expect(screen.getByLabelText('Only show books available now')).not.toBeChecked()
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument()
+    await waitFor(() => expect(mock.fetchMock).toHaveBeenLastCalledWith(expect.not.stringContaining('q=martin'), expect.anything()))
+  })
+
+  it('does not show the clear button on an unfiltered catalogue', async () => {
+    api(json(page([makeBook()])))
+    renderCatalogue()
+
+    await screen.findByText('Clean Code')
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument()
+  })
 })

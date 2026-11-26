@@ -18,13 +18,15 @@ function renderButton() {
 describe('CopyButton', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('puts the value on the clipboard and confirms it', async () => {
+  it('puts the value on the clipboard, confirms it, and shows a checkmark', async () => {
     const user = renderButton()
 
     await user.click(screen.getByRole('button', { name: 'Copy barcode CB-0001' }))
 
     expect(await navigator.clipboard.readText()).toBe('CB-0001')
     expect(await screen.findByRole('status')).toHaveTextContent('Copied CB-0001.')
+    // The button keeps its accessible label; the icon inside switches to a check.
+    expect(screen.getByRole('button', { name: 'Copy barcode CB-0001' })).toBeInTheDocument()
   })
 
   it('says so when the browser refuses the clipboard', async () => {

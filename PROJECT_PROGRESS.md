@@ -50,3 +50,5 @@ the end of each phase.
 Small follow-up features, one or two commits each.
 
 - [x] 2026-11-25 Highlight loans due within two days on My borrowings
+- [x] 2026-11-26 "Clear filters" button on the catalogue
+- [x] 2026-11-26 Copy a barcode from the librarian copies table

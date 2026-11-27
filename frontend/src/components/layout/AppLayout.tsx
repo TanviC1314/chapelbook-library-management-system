@@ -1,6 +1,8 @@
+import { useQuery } from '@tanstack/react-query'
 import { BookOpen, LogOut, Menu, X } from 'lucide-react'
 import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { finesApi } from '../../api/circulation'
 import { useCurrentUser, useAuth } from '../../auth/AuthContext'
 import { roleLabel } from '../../auth/roles'
 import { Spinner } from '../ui/Spinner'
@@ -12,6 +14,13 @@ export default function AppLayout() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const items = navFor(user.role)
+
+  const fineBalance = useQuery({
+    queryKey: ['fine-balance'],
+    queryFn: finesApi.balance,
+    enabled: user.role === 'STUDENT',
+  })
+  const hasUnpaidFines = user.role === 'STUDENT' && (fineBalance.data?.unpaid ?? 0) > 0
 
   // Close the mobile menu whenever the page changes.
   useEffect(() => setMenuOpen(false), [location.pathname])
@@ -57,6 +66,13 @@ export default function AppLayout() {
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
               {label}
+              {hasUnpaidFines && to === '/student/fines' && (
+                <span
+                  className="ml-auto h-2 w-2 rounded-full bg-rose-400"
+                  aria-label="unpaid fines"
+                  data-testid="fines-badge"
+                />
+              )}
             </NavLink>
           ))}
         </nav>

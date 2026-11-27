@@ -97,4 +97,26 @@ describe('App routing and role access', () => {
 
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
   })
+
+  it('shows a fines badge in the student nav when there are unpaid fines', async () => {
+    tokenStore.set(makeToken())
+    mockApi({
+      'GET /users/me': json(makeUser('STUDENT')),
+      'GET /loans/mine': json(page([])),
+      'GET /reservations/mine': json(page([])),
+      'GET /fines/mine/balance': json({ unpaid: 3.5, borrowingBlockedAbove: 5, blocked: false }),
+      'GET /seat-bookings/mine': json(page([])),
+    })
+    renderApp(<App />, { route: '/student' })
+
+    expect(await screen.findByTestId('fines-badge')).toBeInTheDocument()
+  })
+
+  it('hides the fines badge when the student has no unpaid fines', async () => {
+    renderSignedIn('STUDENT', '/student')
+
+    await screen.findByRole('heading', { name: 'Welcome, Test student' })
+
+    expect(screen.queryByTestId('fines-badge')).not.toBeInTheDocument()
+  })
 })

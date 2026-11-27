@@ -53,3 +53,4 @@ Small follow-up features, one or two commits each.
 - [x] 2026-11-26 "Clear filters" button on the catalogue
 - [x] 2026-11-26 Copy a barcode from the librarian copies table
 - [x] 2026-11-26 Checkmark flash on successful clipboard copy
+- [x] 2026-11-27 Unpaid-fines badge in the student nav
